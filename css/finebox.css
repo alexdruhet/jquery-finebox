@@ -1,0 +1,191 @@
+body {
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 300;
+  line-height: 1.2;
+  color: #666;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+#page { width: 90%; margin: 0 auto; }
+h1,h2,h3,h4,h5,h6 {
+  font-family: 'Pacifico', serif;
+  font-weight: 400;
+  color: #009252;
+}
+h1 {
+  font-size: 3em;
+  line-height: 1.3;
+  text-align: left;
+}
+h1 em {
+  font-size: 1.5em;
+  font-style: normal;
+  color: #000;
+}
+a, img {
+    border-width: 0;
+}
+header,
+section {
+  width: 100%;
+  margin: 0 auto;
+}
+ul.list {
+  list-style: none inside none;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+ul.list li {
+  display: block;
+  float: left;
+  width: 280px;
+  height: 200px;
+  text-align: center;
+}
+.pagination { clear: both; }
+.indicator {
+    background: transparent url(../images/indicator.gif) center center no-repeat;
+}
+#footer {
+    clear: both;
+    background-color: #333;
+    color: #eee;
+    padding: 1em 1.5em;
+    text-align: right;
+}
+
+/* Fine Box specific */
+.finebox-processed {
+    cursor: url(../images/zoomin.cur), url(images/zoomin.cur), default;
+/*    cursor: zoom-in;
+    cursor: -moz-zoom-in;
+    cursor: -webkit-zoom-in;*/
+}
+.finebox-processed img {
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    transition-duration: 300ms, 300ms;
+    transition-property: box-shadow, border-radius;
+    transition-timing-function: ease-out, ease-out;
+    -moz-transition-duration: 300ms, 300ms;
+    -moz-transition-property: -moz-box-shadow, -moz-border-radius;
+    -moz-transition-timing-function: ease-out, ease-out;
+    -o-transition-duration: 300ms, 300ms;
+    -o-transition-property: -o-box-shadow, -o-border-radius;
+    -o-transition-timing-function: ease-out, ease-out;
+    -webkit-transition-duration: 300ms, 300ms;
+    -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius;
+    -webkit-transition-timing-function: ease-out, ease-out;
+}
+.finebox-processed.hover img {
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -o-border-radius: 8px;
+    border-radius: 8px;
+    -webkit-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    -moz-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    -o-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    transition-duration: 300ms, 300ms;
+    transition-property: box-shadow, border-radius;
+    transition-timing-function: ease-out, ease-out;
+    -moz-transition-duration: 300ms, 300ms;
+    -moz-transition-property: -moz-box-shadow, -moz-border-radius;
+    -moz-transition-timing-function: ease-out, ease-out;
+    -o-transition-duration: 300ms, 300ms;
+    -o-transition-property: -o-box-shadow, -o-border-radius;
+    -o-transition-timing-function: ease-out, ease-out;
+    -webkit-transition-duration: 300ms, 300ms;
+    -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius;
+    -webkit-transition-timing-function: ease-out, ease-out;
+}
+#finebox-overlay { 
+    background: #000 url(../images/bg-overlay.png);
+}
+#finebox-wrapper {
+    cursor: url(../images/zoomout.cur), url(images/zoomout.cur), default;
+/*    cursor: zoom-out;
+    cursor: -moz-zoom-out;
+    cursor: -webkit-zoom-out;*/
+}
+#finebox-container {
+    background-color: transparent;
+}
+#finebox-container,
+#finebox-container img {
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -o-border-radius: 8px;
+    border-radius: 8px;
+    -webkit-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    -moz-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    -o-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    transition-duration: 300ms, 300ms;
+    transition-property: box-shadow, border-radius;
+    transition-timing-function: ease-out, ease-out;
+    -moz-transition-duration: 300ms, 300ms;
+    -moz-transition-property: -moz-box-shadow, -moz-border-radius;
+    -moz-transition-timing-function: ease-out, ease-out;
+    /* Following lines are commented out because they generates an animation bug in Opera */
+/*    -o-transition-duration: 300ms, 300ms;
+    -o-transition-property: -o-box-shadow, -o-border-radius;
+    -o-transition-timing-function: ease-out, ease-out;*/
+    -webkit-transition-duration: 300ms, 300ms;
+    -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius;
+    -webkit-transition-timing-function: ease-out, ease-out;
+}
+#finebox-container.opened {
+    background-color: #000;
+    color: #eee;
+}
+.finebox-message {}
+.finebox-message span {
+    line-height: 1.3em;
+    padding: .5em 1em;
+    background: #99cc33;
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, .5);
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    -o-border-radius: 2px;
+    border-radius: 2px;
+    -webkit-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    -moz-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    -o-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
+    transition-duration: 300ms, 300ms;
+    transition-property: box-shadow, border-radius;
+    transition-timing-function: ease-out, ease-out;
+    -moz-transition-duration: 300ms, 300ms;
+    -moz-transition-property: -moz-box-shadow, -moz-border-radius;
+    -moz-transition-timing-function: ease-out, ease-out;
+    -o-transition-duration: 300ms, 300ms;
+    -o-transition-property: -o-box-shadow, -o-border-radius;
+    -o-transition-timing-function: ease-out, ease-out;
+    -webkit-transition-duration: 300ms, 300ms;
+    -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius;
+    -webkit-transition-timing-function: ease-out, ease-out;
+}
+.finebox-message span.finebox-error {
+    background: #ff6633;
+    color: #fff;
+}
+.finebox-inner {
+    background-color: #000;
+    color: #eee;
+    background-color: rgba(0, 0, 0, 0.75);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .5);
+    -webkit-border-bottom-right-radius: 4px;
+    -webkit-border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomright: 4px;
+    -moz-border-radius-bottomleft: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    padding: 1em 1.5em;
+}
