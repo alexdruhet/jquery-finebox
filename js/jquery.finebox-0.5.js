@@ -333,7 +333,8 @@
             // Fine Box overlay element
             if ($('#finebox-overlay').length === 0) {
                 fineBox.$overlay = $('<div />', {'id': options.prefix + '-overlay'}).css({
-                    'position' : (fineBox.isIE6 ? 'absolute' : 'fixed'),
+                    'z-index': 11002,
+                    'position': (fineBox.isIE6 ? 'absolute' : 'fixed'),
                     'left': 0,
                     // 'top': (fineBox.isIE6 ? (document.documentElement.scrollTop + document.body.scrollTop) : 0),
                     'top': (fineBox.isIE6 ? $(window).scrollTop() : 0),
@@ -348,6 +349,7 @@
             // Fine Box content wrapper element
             if ($('#finebox-wrapper').length === 0) {
                 fineBox.$wrapper = $('<div />', {'id': options.prefix + '-wrapper'}).css({
+                    'z-index': 11003,
                     'position': (fineBox.isIE6 ? 'absolute' : 'fixed'),
                     'left': 0,
                     // 'top': (fineBox.isIE6 ? (document.documentElement.scrollTop + document.body.scrollTop) : 0),
@@ -441,8 +443,8 @@
                 // Get next and previous DOM elements
                 all = fineBox.$overlay.data('fineBox').$elements,
                 index = all.indexOf(fineBox.$current[0]),
-                $previous = options.loop ? $(all[index - 1] || all[all.length - 1]) : $(all[index - 1]),
-                $next = options.loop ? $(all[index + 1] || all[0]) : $(all[index + 1]),
+                $previous = options.loop && all.length > 1 ? $(all[index - 1] || all[all.length - 1]) : $(all[index - 1]),
+                $next = options.loop && all.length > 1 ? $(all[index + 1] || all[0]) : $(all[index + 1]),
 
                 // Fill data
                 data = {
@@ -728,6 +730,9 @@
                 args = arguments;
 
             if (!fineBox.isLoaded) {
+                if (callback) {
+                    fineBox.hook.apply(fineBox, args);
+                }
                 return false;
             }
 
@@ -784,7 +789,7 @@
                 $msgTarget = !fineBox.isOpened ? fineBox.$current.parent() : fineBox.$container;
 
             if (!fineBox.isOpened) {
-                // ;;; log('fireOpening not opened', $this, $fragment, $image.parent(), CSSorigin, CSSoverlay);
+                // ;;; log('fireOpening not opened', $image, $image.parent(), CSSorigin, CSSoverlay);
 
                 $image.css({
                     'width': CSSorigin.width,
@@ -839,7 +844,7 @@
 
                 });
             } else {
-                // ;;; log('fireOpening opened', $this, $fragment, $image, CSSorigin, CSSoverlay);
+                // ;;; log('fireOpening opened', $image, CSSorigin, CSSoverlay);
 
                 fineBox.hidePager();
                 $image.css({
