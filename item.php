@@ -1,5 +1,6 @@
 <?php
- $src = $_GET['image'];
+ $img_src = $_GET['image'];
+ $video_src = $_GET['video'];
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -24,7 +25,7 @@
         <div id="gallery-item-wrapper">              
 
         	<div class="photo">
-        		<img src="images/<?php echo $src; ?>.jpg" alt="" />
+        		<img src="images/<?php echo $img_src; ?>" alt="" />
         	</div>
 
         	<div class="datas">

@@ -9,7 +9,7 @@ body {
   margin: 0;
   padding: 0;
 }
-#page { width: 90%; margin: 0 auto; }
+#page { width: 90%; margin: 0 auto; max-width: 1240px; }
 h1,h2,h3,h4,h5,h6 {
   font-family: 'Pacifico', serif;
   font-weight: 400;
@@ -38,20 +38,60 @@ ul.list {
   display: block;
   margin: 0;
   padding: 0;
-}
-ul.list li {
-  display: block;
-  float: left;
-  width: 280px;
-  height: 200px;
   text-align: center;
 }
+ul.list li {
+  /*display: block;
+  float: left;*/
+  display: inline-block;
+  *display: inline;
+  zoom: 1;
+  width: 166px;
+  height: 220px;
+  text-align: center;
+  margin: 0 10px 10px;
+  padding: 0;
+}
+.item-container {
+    display: inline-block;
+    *display: inline;
+    zoom: 1;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    word-wrap: break-word;
+}
 .pagination { clear: both; }
+
 .indicator {
     background: transparent url(../images/indicator.gif) center center no-repeat;
 }
+.page-separator {
+    clear: both;
+    border-top: 1.5em solid #eee;
+}
+.page-separator h2 {
+    display: inline-block;
+}
+.page-separator a {
+       display: inline-block;
+       float: right; 
+       margin: 10px 10px 10px 0;
+}
 #footer {
     clear: both;
+    background-color: #333;
+    color: #eee;
+    padding: 1em 1.5em;
+    text-align: right;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background-color: #333;
     color: #eee;
     padding: 1em 1.5em;
@@ -66,9 +106,10 @@ ul.list li {
     cursor: -webkit-zoom-in;*/
 }
 .finebox-processed img {
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
+    width: 100%;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
     transition-duration: 300ms, 300ms;
     transition-property: box-shadow, border-radius;
     transition-timing-function: ease-out, ease-out;
@@ -83,26 +124,10 @@ ul.list li {
     -webkit-transition-timing-function: ease-out, ease-out;
 }
 .finebox-processed.hover img {
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    -o-border-radius: 8px;
-    border-radius: 8px;
     -webkit-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
     -moz-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
     -o-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
     box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
-    transition-duration: 300ms, 300ms;
-    transition-property: box-shadow, border-radius;
-    transition-timing-function: ease-out, ease-out;
-    -moz-transition-duration: 300ms, 300ms;
-    -moz-transition-property: -moz-box-shadow, -moz-border-radius;
-    -moz-transition-timing-function: ease-out, ease-out;
-    -o-transition-duration: 300ms, 300ms;
-    -o-transition-property: -o-box-shadow, -o-border-radius;
-    -o-transition-timing-function: ease-out, ease-out;
-    -webkit-transition-duration: 300ms, 300ms;
-    -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius;
-    -webkit-transition-timing-function: ease-out, ease-out;
 }
 #finebox-overlay { 
     background: #000 url(../images/bg-overlay.png);
@@ -115,13 +140,10 @@ ul.list li {
 }
 #finebox-container {
     background-color: transparent;
-}
-#finebox-container,
-#finebox-container img {
-    -webkit-border-radius: 8px;
-    -moz-border-radius: 8px;
-    -o-border-radius: 8px;
-    border-radius: 8px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -o-border-radius: 3px;
+    border-radius: 3px;
     -webkit-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
     -moz-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
     -o-box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, .5);
@@ -132,13 +154,15 @@ ul.list li {
     -moz-transition-duration: 300ms, 300ms;
     -moz-transition-property: -moz-box-shadow, -moz-border-radius;
     -moz-transition-timing-function: ease-out, ease-out;
-    /* Following lines are commented out because they generates an animation bug in Opera */
-/*    -o-transition-duration: 300ms, 300ms;
-    -o-transition-property: -o-box-shadow, -o-border-radius;
-    -o-transition-timing-function: ease-out, ease-out;*/
     -webkit-transition-duration: 300ms, 300ms;
     -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius;
     -webkit-transition-timing-function: ease-out, ease-out;
+}
+#finebox-target {
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -o-border-radius: 3px;
+    border-radius: 3px;
 }
 #finebox-container.opened {
     background-color: #000;
@@ -188,4 +212,117 @@ ul.list li {
     border-bottom-right-radius: 4px;
     border-bottom-left-radius: 4px;
     padding: 1em 1.5em;
+}
+.pager {
+  display: block;
+  margin: 0 0 1.375em;
+  padding: 0;
+  text-align: center;
+  list-style: none;
+  *zoom: 1;
+}
+
+.pager:before,
+.pager:after {
+  display: table;
+  content: "";
+}
+
+.pager:after {
+  clear: both;
+}
+
+.pager li {
+  display: inline;
+  font-family: "HelveticaNeue-Condensed", "Helvetica Neue Condensed", Arial, Helvetica, sans-serif;
+  font-size: 100%;
+  font-weight: normal;
+  line-height: 1.375em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.pager a {
+  display: inline-block;
+  padding: 0.6875em 0.84979620341958em;
+  color: #555555;
+  text-decoration: none;
+  text-shadow: 0 1px 0 #ffffff;
+  background-color: #f8f8f8;
+  background-image: -o-linear-gradient(top, #ffffff, #eeeeee);
+  background-image: -webkit-linear-gradient(top, #ffffff, #eeeeee);
+  background-image: -moz-linear-gradient(top, #ffffff, #eeeeee);
+  background-image: linear-gradient(top, #ffffff, #eeeeee);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#eeeeee));
+  background-image: -ms-linear-gradient(top, #ffffff, #eeeeee);
+  background-repeat: repeat-x;
+  border: 1px solid #ffffff;
+  border-left-width: 0;
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+          border-radius: 3px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+     -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.pager a:hover {
+  color: #333333;
+  background-color: #f5f5f5;
+  background-image: -moz-linear-gradient(top, #eeeeee, #ffffff);
+  background-image: -ms-linear-gradient(top, #eeeeee, #ffffff);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#eeeeee), to(#ffffff));
+  background-image: -webkit-linear-gradient(top, #eeeeee, #ffffff);
+  background-image: -o-linear-gradient(top, #eeeeee, #ffffff);
+  background-image: linear-gradient(top, #eeeeee, #ffffff);
+  background-repeat: repeat-x;
+}
+
+.pager .next a {
+  float: right;
+}
+
+.pager .previous a {
+  float: left;
+}
+
+.pager .disabled a,
+.pager .disabled a:hover {
+  color: #999999;
+  cursor: default;
+  background-color: #fff;
+}
+
+/**
+ * utilities
+ * @url http://sonspring.com/journal/clearing-floats 
+ * @url http://perishablepress.com/press/2008/02/05/lessons-learned-concerning-the-clearfix-css-hack
+ */
+.clear {
+	clear: both;
+	display: block;
+	overflow: hidden;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+.clearfix:after {
+	clear: both;
+	content: ' ';
+	display: block;
+	font-size: 0;
+	line-height: 0;
+	visibility: hidden;
+	width: 0;
+	height: 0;
+}
+.clearfix { display: inline-block; }
+* html .clearfix { height: 1%; }
+.clearfix { display: block; }
+.invisible {
+  position: absolute;
+  top: 0;
+  left: 0;
+  clip: rect(1px, 1px, 1px, 1px);
+  text-indent: -5000px;
 }
