@@ -11,6 +11,58 @@
                 ot = Math.round($(a).offset().top),
                 wh = (window.innerHeight && window.innerHeight < $(window).height()) ? window.innerHeight : $(window).height();
             return !(ot > (wh - st) || ($(a).height() + ot) < st);
+        },
+        scrollable: function (element, index, meta, stack) {
+            
+            try {            
+                var converter = {
+                		vertical: { x: false, y: true },
+                		horizontal: { x: true, y: false },
+                		both: { x: true, y: true },
+                		x: { x: true, y: false },
+                		y: { x: false, y: true }
+                	},
+                	scrollValue = {
+                		auto: true,
+                		scroll: true,
+                		visible: false,
+                		hidden: false
+                	},
+            	    rootrx = /^(?:html)$/i,
+                    direction = converter[typeof (meta[3]) === "string" && meta[3].toLowerCase()] || converter.both,
+                    styles = (document.defaultView && document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(element, null) : element.currentStyle),
+                    overflow = {
+                        x: scrollValue[styles.overflowX.toLowerCase()] || false,
+                        y: scrollValue[styles.overflowY.toLowerCase()] || false,
+                        isRoot: rootrx.test(element.nodeName)
+                    };
+
+                // check if completely unscrollable (exclude HTML element because it's special)
+                if (!overflow.x && !overflow.y && !overflow.isRoot){
+                    return false;
+                }
+                var size = {
+                    height: {
+                        scroll: element.scrollHeight,
+                        client: element.clientHeight
+                    },
+                    width: {
+                        scroll: element.scrollWidth,
+                        client: element.clientWidth
+                    },
+                    // check overflow.x/y because iPad (and possibly other tablets) don't dislay scrollbars
+                    scrollableX: function () {
+                        return (overflow.x || overflow.isRoot) && this.width.scroll > this.width.client;
+                    },
+                    scrollableY: function () {
+                        return (overflow.y || overflow.isRoot) && this.height.scroll > this.height.client;
+                    }
+                };
+                return direction.y && size.scrollableY() || direction.x && size.scrollableX();
+            } catch (e) {
+                $.error(':scrollable selector error: %o', e);
+            }
+
         }
     });
 
@@ -18,12 +70,15 @@
     function Indicator($parent) {
         this.$indicator = $('<span/>', {
             'class': 'indicator',
-            'style': 'display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-position: center center;'
+            'style': 'display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-position: center center;'
+            // 'style': 'display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-position: center center;'
         });
-        this.$parent = $parent.css('position', 'relative');
+        this.$parent = $parent;
+        //$parent.css('position') === 'static' && $parent.css('position', 'relative');
     }
     Indicator.prototype.add = function (cssObj) {
-        this.$indicator.hide().css(cssObj).prependTo(this.$parent).fadeTo('fast', 0.75);
+        this.$indicator.hide().css(cssObj).prependTo(this.$parent.children(':first')).fadeTo('fast', 0.75);
+        // this.$indicator.hide().css(cssObj).prependTo(this.$parent).fadeTo('fast', 0.75);
     };
     Indicator.prototype.remove = function () {
         this.$indicator.fadeOut('fast').remove();
@@ -92,7 +147,7 @@
         setMessage : function (message, level, $parent) {
             // ;;; log('setMessage', this, arguments);
 
-            var options = fineBox.publics.getOptions();
+            var options = fineBox.$current.data('fineBox').options;
             $('<div/>', {
                 'class': options.prefix + '-message',
                 'style': 'display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; line-height: ' + $parent.height() + 'px;'
@@ -121,10 +176,8 @@
             if ($img) {
                 return $img;
             }
-            else {
-                return $fragment;
-            }
-            return false;
+
+            return $fragment;
         },
 
         freezeWindowScroll : function () {
@@ -164,6 +217,7 @@
             var options = {
                     'transitionMode': 'full', // Transition mode : full or minimal
                     'filter': 'div:first-child',
+                    'infosSelector': '.datas',
                     'prefix': 'finebox',
                     'loop': false,
                     'messageDelay': 3000,
@@ -235,7 +289,6 @@
                 if ($(this).hasClass(options.prefix + '-processed')) {
                     fineBox.$overlay.data('fineBox').$elements.push($(this)[0]);
                 }
-                // fineBox.$overlay.data('fineBox').$elements.push($this[0]);
             });
 
             return this.not('.' + options.prefix + '-processed').each(function () {
@@ -245,7 +298,7 @@
 
                 // If the plugin hasn't been initialized yet
                 if (!data) {
-
+                    
                     // save item data
                     $this.data('fineBox', {
                         '$origin' : $this,
@@ -254,16 +307,9 @@
                     }).css({
                         'display': 'block'
                     });
-                    // log('$this.data', $this.data('fineBox'));
 
-                    // save item to $elements collection
-                    // if (!fineBox.$overlay.data('fineBox').$elements) {
-                    //     fineBox.$overlay.data('fineBox').$elements = [];
-                    // }
-                    // fineBox.$overlay.data('fineBox').$elements = [];
+                    fineBox.initInfosSrc($this);
                     fineBox.$overlay.data('fineBox').$elements.push($this[0]);
-
-                    // bind fineBox events
                     fineBox.bindEvents(this);
 
                     // enrole others hyperlinks with same href
@@ -311,9 +357,7 @@
                     'width': '100%',
                     'height': '100%'
                     // ,'overflow': 'hidden'
-                }).hide().appendTo('body').data('fineBox', {
-                    'options': options
-                });
+                }).hide().appendTo('body').data('fineBox', {});
             }
 
             // Fine Box content wrapper element
@@ -344,6 +388,27 @@
             // Events binding for these elements
             fineBox.bindPlaceholderEvents(options);
 
+        },
+        
+        addCloseButton : function () {
+            // ;;; log('Firing addCloseButton !', this, arguments);
+
+            if (!fineBox.$container.find('.close').length) {
+                $('<a class="close" href="#"><i class="lemonicon-close">&times;</i></a>').css({
+                    'position': 'absolute',
+                    'top': '10px',
+                    'right': '10px',
+                    'z-index': 78
+                }).one('click.fineBox', function () {
+                    fineBox.$overlay.trigger('click.fineBox');
+                    if (fineBox.isOpened && !fineBox.isLoading) {
+                        $(this).remove();
+                    }
+                    return false;
+                }).appendTo(fineBox.$container);
+            }
+            
+            return this;
         },
 
         bindPlaceholderEvents : function (options) {
@@ -438,7 +503,8 @@
 
             // Metrics of the DOM box content
             var data = fineBox.$overlay.data('fineBox'),
-                originData = data.$origin.data('fineBox'),
+                originData = fineBox.$current.data('fineBox'),
+                options = originData.options,
                 newData,
                 $target,
                 hookAlterOverlayDataResult,
@@ -455,7 +521,7 @@
 
             switch (originData.mode) {
                 case 'img':
-                    $target = $('<img />').attr('src', originData.$target.attr('src')).addClass(data.options.prefix + '-target');
+                    $target = $('<img />').attr('src', originData.$target.attr('src')).addClass(options.prefix + '-target');
                     endWbase = $target[0].width;
                     endHbase = $target[0].height;
                     break;
@@ -465,17 +531,17 @@
                 //     endHbase = $target.height();
                 //     break;
                 case 'sig':
-                    $target = originData.$target.clone().addClass(data.options.prefix + '-target');
+                    $target = originData.$target.clone().addClass(options.prefix + '-target');
                     endWbase = $target.width();
                     endHbase = $target.height();
                     break;
                 case 'page':
-                    $target = $('<img />').attr('src', originData.$target.attr('src')).addClass(data.options.prefix + '-target');
+                    $target = $('<img />').attr('src', originData.$target.attr('src')).addClass(options.prefix + '-target');
                     endWbase = $target[0].width;
                     endHbase = $target[0].height;
                     break;
                 default:
-                    $target = originData.$target.clone().addClass(data.options.prefix + '-target');
+                    $target = originData.$target.clone().addClass(options.prefix + '-target');
                     endWbase = $target.width();
                     endHbase = $target.height();
             }
@@ -495,14 +561,14 @@
             endH = endHbase;
 
             // Set end width
-            if (endWbase >= (docW - data.options.viewportSpace - 1)) {
-                endW = Math.round(docW - data.options.viewportSpace);
+            if (endWbase >= (docW - options.viewportSpace - 1)) {
+                endW = Math.round(docW - options.viewportSpace);
                 endH = Math.round((endHbase  / endWbase) * endW);
             }
 
             // Set end height
-            if (endH >= (docH - data.options.viewportSpace - 1)) {
-                endH = Math.round(docH - data.options.viewportSpace);
+            if (endH >= (docH - options.viewportSpace - 1)) {
+                endH = Math.round(docH - options.viewportSpace);
                 endW = Math.round((endWbase / endHbase) * endH);
             }
 
@@ -535,8 +601,8 @@
             $.extend(fineBox.$overlay.data('fineBox'), newData);
 
             // Apply user hook
-            if (typeof data.options.hookAlterOverlayData === 'function') {
-                hookAlterOverlayDataResult = data.options.hookAlterOverlayData.apply(fineBox, [fineBox.$overlay.data('fineBox')]);
+            if (typeof options.hookAlterOverlayData === 'function') {
+                hookAlterOverlayDataResult = options.hookAlterOverlayData.apply(fineBox, [fineBox.$overlay.data('fineBox')]);
                 if (hookAlterOverlayDataResult) {
                     // Save data
                     $.extend(fineBox.$overlay.data('fineBox'), hookAlterOverlayDataResult);
@@ -547,33 +613,33 @@
 
         adjust : function () {
 
-            var data, originData;
+            var data = fineBox.$overlay.data('fineBox'),
+                originData = fineBox.$current.data('fineBox'),
+                options = originData.options;
 
             if (fineBox.isLoading) {
                 return false;
             }
 
             fineBox.setOverlayData();
-            data = fineBox.$overlay.data('fineBox');
-            originData = fineBox.$current.data('fineBox');
             fineBox.unfreezeWindowScroll();
 
             originData.$target.stop(true).animate(
                 data.CSStarget,
-                data.options.durationIn,
-                data.options.easingIn
+                options.durationIn,
+                options.easingIn
             );
 
             fineBox.$container.stop(true).animate(
                 data.CSSoverlay,
-                data.options.durationIn,
-                data.options.easingIn,
+                options.durationIn,
+                options.easingIn,
                 function () {
                     fineBox.$container.css('overflow', 'inherit');
                     fineBox.freezeWindowScroll();
                     fineBox.setOriginData();
-                    if (typeof data.options.hookAdjust === 'function') {
-                        data.options.hookAdjust.apply(fineBox, [fineBox.$overlay.data('fineBox')]);
+                    if (typeof options.hookAdjust === 'function') {
+                        options.hookAdjust.apply(fineBox, [fineBox.$overlay.data('fineBox')]);
                     }
                 }
             );
@@ -584,7 +650,7 @@
 
             var options = $this.data('fineBox').options,
                 $parent = $this.parent(),
-                $fragment = $(),
+                $infos = $this.data('fineBox').$infos,
                 $target,
                 img,
                 $img,
@@ -592,6 +658,9 @@
                 indicator = new Indicator($msgTarget);
 
             fineBox.$current = $this;
+            $.extend(fineBox.$overlay.data('fineBox'), {
+                '$current' : $this
+            });
             fineBox.isLoading = true;
             indicator.add({
                 'display': 'block',
@@ -645,9 +714,9 @@
                             setTimeout(function () {
                                 $.extend($this.data('fineBox'), {
                                     '$target' : $(img),
-                                    '$fragment' : $fragment
+                                    '$infos' : $infos
                                 });
-                                fineBox.openItem($this, $fragment);
+                                fineBox.openItem($this);
                             }, 1);
                         }).addClass(options.prefix + '-target');
 
@@ -671,7 +740,10 @@
                         dataType: 'html',
                         async: true,
                         success: function (data) {
-                            $fragment = $('<div class="' + options.prefix + '-inner" />').append($(data).find(options.filter).attr('id', null));
+                            var $html = $(data).find(options.filter).attr('id', null);
+                            if (!$infos || !$infos.length) {
+                                $infos = $html.find(options.infosSelector).attr('id', null);
+                            }
                             $(img = new Image())
                                 .error(onErrorAction)
                                 .load(function () {
@@ -681,19 +753,14 @@
 
                                         $.extend($this.data('fineBox'), {
                                             '$target' : $(img),
-                                            '$fragment' : $fragment
+                                            '$infos' : $infos
                                         });
-                                        fineBox.openItem($this, $fragment);
+                                        fineBox.openItem($this);
                                     }, 1);
                                 }).addClass(options.prefix + '-target').get(0);
 
                             setTimeout(function () {
-                                $img = fineBox.getBiggestInFragment($fragment).detach();
-                                $fragment = $fragment.find('*').each(function () {
-                                    if (!$.trim($(this).text()).length) {
-                                        $(this).remove();
-                                    }
-                                }).end();
+                                $img = fineBox.getBiggestInFragment($html).detach();
                                 img.src = $img.attr('src');
                             }, 1);
                         },
@@ -717,54 +784,47 @@
                         $target = $this.data('fineBox').$target;
                     }
                     else {
-                        $target = $('<div id="flash_kplayer_' + sig + '" class="flash_kplayer" data-sig="' + sig + '" data-playerkey="' + playerKey + '" style="width:640px; height:360px;">'
+                        $target = $('<div id="flash_kplayer_' + sig + '" class="flash_kplayer" data-sig="' + sig + '" data-playerkey="' + playerKey + '" style="width: 640px; height: 360px; margin: 0; padding: 0;">'
                             +'<object type="application/x-shockwave-flash" data="http://sa.kewego.com/swf/kp.swf" name="kplayer_' + sig + '" id="kplayer_' + sig + '" height="100%" width="100%">'
-                                +'<param name="bgcolor" value="0x000000">'
-                    			+'<param name="allowfullscreen" value="true">'
-                    			+'<param name="allowscriptaccess" value="always">'
-                    			+'<param name="flashVars" value="language_code=en&amp;playerKey=' + playerKey + '&amp;configKey=' + configKey + '&amp;suffix=&amp;sig=' + sig + '&amp;autostart=true">'
-                    			+'<param name="movie" value="http://sa.kewego.com/swf/kp.swf">'
-                    			+'<param name="wmode" value="opaque">'
-                    			+'<param name="SeamlessTabbing" value="false">'
-                    			+'<video poster="http://api.kewego.com/video/getHTML5Thumbnail/?playerKey=' + playerKey + '&amp;sig=' + sig + '" preload="none" controls="controls" height="100%" width="100%"></video>'
-                    		+'</object>'
-                    	+'</div>').addClass(options.prefix + '-target');
+                            +'<param name="bgcolor" value="0x000000">'
+                            +'<param name="allowfullscreen" value="true">'
+                            +'<param name="allowscriptaccess" value="always">'
+                            +'<param name="flashVars" value="language_code=en&amp;playerKey=' + playerKey + '&amp;configKey=' + configKey + '&amp;suffix=&amp;sig=' + sig + '&amp;autostart=true">'
+                            +'<param name="movie" value="http://sa.kewego.com/swf/kp.swf">'
+                            +'<param name="wmode" value="opaque">'
+                            +'<param name="SeamlessTabbing" value="false">'
+                            +'<video poster="http://api.kewego.com/video/getHTML5Thumbnail/?playerKey=' + playerKey + '&amp;sig=' + sig + '" preload="none" controls="controls" height="100%" width="100%"></video>'
+                            +'</object>'
+                            +'</div>').addClass(options.prefix + '-target');
                     }
                     $.extend($this.data('fineBox'), {
                         '$target' : $target,
-                        '$fragment' : $fragment
+                        '$infos' : $infos
                     });
 
                     removeIndicator();
                     setTimeout(function () {
-                        fineBox.openItem($this, $fragment);
+                        fineBox.openItem($this);
                     }, 1);
 
                     break;
             }
         },
 
-        openItem : function ($this, $fragment) {
-
-            var options = $this.data('fineBox').options;
+        openItem : function ($this) {
 
             fineBox.isOpening = true;
-            $.extend(fineBox.$overlay.data('fineBox'), {
-                '$origin' : $this,
-                'options' : options
-            });
-            fineBox.$current = $this;
             fineBox.setOriginData();
             fineBox.setOverlayData();
             fineBox.freezeWindowScroll();
 
-            switch (options.transitionMode) {
-            case 'full':
-                fineBox.closeItem('fireOpening');
-                break;
-            case 'minimal':
-                fineBox.fireOpening();
-                break;
+            switch ($this.data('fineBox').options.transitionMode) {
+                case 'full':
+                    fineBox.closeItem('fireOpening');
+                    break;
+                case 'minimal':
+                    fineBox.fireOpening();
+                    break;
             }
 
         },
@@ -772,7 +832,7 @@
         closeItem : function (callback) {
 
             var data = fineBox.$overlay.data('fineBox'),
-                options = data.options,
+                options = fineBox.$current.data('fineBox').options,
                 CSSorigin = data.CSSorigin,
                 args = arguments;
 
@@ -785,7 +845,7 @@
 
             fineBox.enableSlideShow = false;
             fineBox.hidePager();
-            fineBox.hideFragment();
+            fineBox.hideInfos();
 
             if (fineBox.isOpened) {
                 fineBox.$overlay.fadeOut('fast', function () {
@@ -826,7 +886,7 @@
 
             var data = fineBox.$overlay.data('fineBox'),
                 originData = fineBox.$current.data('fineBox'),
-                options = data.options,
+                options = originData.options,
                 $target = originData.$target,
                 CSSorigin = data.CSSorigin,
                 CSSoverlay = data.CSSoverlay,
@@ -853,11 +913,13 @@
                             $(this).addClass('opened').css('overflow', 'inherit').addClass(options.prefix + '-' + originData.mode);
                             fineBox.isOpening = false;
                             fineBox.isOpened = true;
-                            if ((typeof options.hookOnOpen) === 'function') {
-                                options.hookOnOpen.apply(fineBox);
-                            } else {
-                                fineBox.showFragment();
-                            }
+                            // if ((typeof options.hookOnOpen) === 'function') {
+                            //     options.hookOnOpen.apply(fineBox);
+                            // } else {
+                            //     fineBox.showInfos();
+                            // }
+                            fineBox.addCloseButton();
+                            fineBox.showInfos();
                             fineBox.showPager();
                             fineBox.$overlay.fadeTo('slow', options.overlayOpacity, function () {
                                 fineBox.isLoaded = true;
@@ -875,11 +937,11 @@
 
                 });
             } else {
-                // log('fireOpening B', options.durationIn, fineBox.hideFragment().stop(true).delay(options.durationIn).find('.' + options.prefix + '-target').hide());
+                // log('fireOpening B', options.durationIn, fineBox.hideInfos().stop(true).delay(options.durationIn).find('.' + options.prefix + '-target').hide());
                 fineBox.hidePager();
                 $target.css(CSStarget);
-                fineBox.hideFragment().stop(true).delay(options.durationIn).find('.' + options.prefix + '-target').fadeOut((options.durationIn / 1.2), function () {
-                    log('REMOVE TARGET', this, arguments);
+                // fineBox.hideInfos().stop(true).delay(options.durationIn).find('.' + options.prefix + '-target').fadeOut((options.durationIn / 1.2), function () {
+                fineBox.hideInfos().$container.stop(true).delay(options.durationIn).find('.' + options.prefix + '-target').fadeOut((options.durationIn / 1.2), function () {
                     $(this).remove();
                 }).end().delay((options.durationIn / 1.2)).animate(
                     CSSoverlay,
@@ -892,11 +954,13 @@
                         $target.hide().appendTo(fineBox.$container).fadeIn('fast', function () {
                             fineBox.isOpening = false;
                             fineBox.isOpened = true;
-                            if ((typeof options.hookOnOpen) === 'function') {
-                                options.hookOnOpen.apply(fineBox);
-                            } else {
-                                fineBox.showFragment();
-                            }
+                            // if ((typeof options.hookOnOpen) === 'function') {
+                            //     options.hookOnOpen.apply(fineBox);
+                            // } else {
+                            //     
+                            // }
+                            fineBox.addCloseButton();
+                            fineBox.showInfos();
                             fineBox.showPager();
                             fineBox.isLoaded = true;
                             if (fineBox.enableSlideShow) {
@@ -913,41 +977,77 @@
             }
         },
 
-        showFragment : function () {
+        initInfosSrc : function ($e) {
+            var data = $e.data(),
+                $infos;
+            if (data.infosSrc) {
+                $infos = $(data.infosSrc);
+                if (!$infos.length) {
+                    $.ajax({
+                        url: data.infosSrc
+                    }).done(function (html) {
+                        $.extend($e.data('fineBox'), {
+                            '$infos' : $(html).attr('id', null)
+                        });
+                    });
+                } else {
+                    $.extend($e.data('fineBox'), {
+                        '$infos' : $infos.clone().attr('id', null)
+                    });
+                }
+            }
+            return this;
+        },
+        
+        showInfos : function () {
 
             var data = fineBox.$overlay.data('fineBox'),
-                originData = data.$origin.data('fineBox');
-
-            if (originData.$fragment.html() !== '') {
-                originData.$fragment.hide().css({
-                    'position': 'absolute',
-                    'top' : 0,
-                    'right' : '3em',
-                    'width': '33%',
-                    'height': 'auto'
-                }).appendTo(fineBox.$container).fadeIn();
+                originData = fineBox.$current.data('fineBox'),
+                options = originData.options,
+                $infos = originData.$infos;
+            
+            if ((typeof options.hookOnOpen) === 'function') {
+                options.hookOnOpen.apply(fineBox);
             } else {
-                originData.$fragment.remove();
+                if ($infos && $infos.length) {
+                    if ($infos.not('.' + options.prefix + '-infos')) {
+                        $infos = $infos.show().wrap('<div class="' + options.prefix + '-infos" />').parent();
+                    }
+                    $infos.hide().css({
+                        'position': 'absolute',
+                        'top' : 0,
+                        'right' : '3em',
+                        'width': '33%',
+                        'height': 'auto'
+                    }).appendTo(fineBox.$container).fadeIn();
+                }
             }
+
+            return this;
 
         },
 
-        hideFragment : function () {
+        hideInfos : function () {
 
             var data = fineBox.$overlay.data('fineBox'),
+                originData = fineBox.$current.data('fineBox'),
+                options = originData.options,
+                $infos = fineBox.$container.find('.' + options.prefix + '-infos'),
                 callbacks = $.Callbacks('once');
-            
+
             callbacks.add(function () {
-                $(this).remove();
+                $infos.remove();
             });
 
-            if ((typeof data.options.hookOnClose) === 'function') {
-                return data.options.hookOnClose.apply(fineBox);
+            if ((typeof options.hookOnClose) === 'function') {
+                options.hookOnClose.apply(fineBox);
             } else {
-                return fineBox.$container.find('.' + data.options.prefix + '-inner').fadeOut('fast', function () {
+                $infos.fadeOut('fast', function () {
                     callbacks.fire();
-                }).end();
+                });
             }
+
+            return this;
 
         },
 
@@ -955,16 +1055,17 @@
 
             var data = fineBox.$overlay.data('fineBox'),
                 originData = fineBox.$current.data('fineBox'),
+                options = originData.options,
                 $prevDiv,
                 $nextDiv,
                 prevHref,
                 nextHref,
                 bottom = originData.mode === 'sig' ? '40%' : 0,
                 $pager = fineBox.$container.find('.pager'),
-                tpl = '<ul class="pager"><li class="previous ' + data.options.prefix + '-previous" style="display: none;"><a href="#"></a></li><li class="next ' + data.options.prefix + '-next" style="display: none;"><a href="#"></a></li></ul>';
+                tpl = '<ul class="pager"><li class="previous ' + options.prefix + '-previous" style="display: none;"><a href="#"></a></li><li class="next ' + options.prefix + '-next" style="display: none;"><a href="#"></a></li></ul>';
 
-            if (typeof data.options.hookPager === 'function') {
-                data.options.hookPager.apply(fineBox, [data.options.prefix + '-previous', data.options.prefix + '-next']);
+            if (typeof options.hookPager === 'function') {
+                options.hookPager.apply(fineBox, [options.prefix + '-previous', options.prefix + '-next']);
             }
             
             if ($pager.length === 0) {
@@ -972,27 +1073,28 @@
                     position: 'absolute',
                     left: -10,
                     right: -10,
-                    bottom: bottom
+                    bottom: bottom,
+                    zIndex: 76
                 });
             }
             else {
                 $pager.css('bottom', bottom);   
             }
 
-            $prevDiv = $pager.find('.' + data.options.prefix + '-previous');
-            $nextDiv = $pager.find('.' + data.options.prefix + '-next');
+            $prevDiv = $pager.find('.' + options.prefix + '-previous');
+            $nextDiv = $pager.find('.' + options.prefix + '-next');
             
             prevHref = data.$previous.attr('href') || '';
             nextHref = data.$next.attr('href') || '';
             
             if ($prevDiv && $prevDiv.find('a').length > 0 && data.$previous.length > 0 && data.$previous !== fineBox.$current) {
-                $prevDiv.find('a').attr('href', prevHref).html('<i class="icon-chevron-left"></i><span>' + data.options.strings.prev + '</span>').off('click').on('click.fineBox', function () {
+                $prevDiv.find('a').attr('href', prevHref).html('<i class="icon-chevron-left"></i><span>' + options.strings.prev + '</span>').off('click').on('click.fineBox', function () {
                     fineBox.publics.previous();
                     return false;
                 }).end().fadeIn();
             }
             if ($nextDiv && $nextDiv.find('a').length > 0 && data.$next.length > 0 && data.$next !== fineBox.$current) {
-                $nextDiv.find('a').attr('href', nextHref).html('<span>' + data.options.strings.next + '</span><i class="icon-chevron-right"></i>').off('click').on('click.fineBox', function () {
+                $nextDiv.find('a').attr('href', nextHref).html('<span>' + options.strings.next + '</span><i class="icon-chevron-right"></i>').off('click').on('click.fineBox', function () {
                     fineBox.publics.next();
                     return false;
                 }).end().fadeIn();
@@ -1002,26 +1104,37 @@
         hidePager : function () {
 
             var data = fineBox.$overlay.data('fineBox'),
-                $prevDiv = fineBox.$container.find('.' + data.options.prefix + '-previous'),
-                $nextDiv = fineBox.$container.find('.' + data.options.prefix + '-next');
+                originData = fineBox.$current.data('fineBox'),
+                options = originData.options,
+                $prevDiv = fineBox.$container.find('.' + options.prefix + '-previous'),
+                $nextDiv = fineBox.$container.find('.' + options.prefix + '-next');
 
             $prevDiv.add($nextDiv).fadeOut().find('a').attr('href', '').html('').off('click.fineBox');
         },
 
         scrollToIfNotInView : function ($element, callback) {
 
-            var data = fineBox.$overlay.data('fineBox');
+            var data = fineBox.$overlay.data('fineBox'),
+                originData = fineBox.$current.data('fineBox'),
+                options = originData.options,
+                $scrollable = fineBox.$current.closest(':scrollable');
+            
+            if ($element.length) {
 
-            if ($element.length > 0 && !$element.is(':inView')) {
-                $('html, body').stop(true).animate(
+                // log('options.viewportSpace', options.viewportSpace);
+                // log('$element', $element, 'offsetTop: ' + parseInt($element.offset().top, 10), 'positionTop: ' + parseInt($element.position().top, 10), 'scrollTop: ' + parseInt($element.scrollTop(), 10), 'css.top: ' + $element.css('top'));
+                // log('$scrollable', $scrollable, 'offsetTop: ' + parseInt($scrollable.offset().top, 10), 'positionTop: ' + parseInt($scrollable.position().top, 10), 'scrollTop: ' + parseInt($scrollable.scrollTop(), 10));
+                // log('RESULT', $element.position().top - options.viewportSpace);
+                // log('--------------------------------------')
+
+                $scrollable.stop(true).animate(
                     {
-                        'scrollTop': ($element.offset().top - data.options.viewportSpace)
+                        'scrollTop': ($element.position().top - options.viewportSpace)
                     },
                     {
-                        duration : data.options.durationIn,
-                        easing : data.options.easingIn,
+                        duration : options.durationIn,
+                        easing : options.easingIn,
                         complete : function () {
-                            // fineBox.setOriginData();
                             if (callback) {
                                 callback.apply(fineBox);
                             }
@@ -1029,7 +1142,6 @@
                     }
                 );
             } else {
-                // fineBox.setOriginData();
                 if (callback) {
                     callback.apply(fineBox);
                 }
@@ -1038,7 +1150,7 @@
 
         publics : {
             getOptions : function () {
-                return $.hasData(fineBox.$current) ? fineBox.$current.data('fineBox').options : fineBox.$overlay.data('fineBox').options;
+                return fineBox.$current.data('fineBox').options;
             },
             open : function (options) {
                 if (!this.data('fineBox')) {
@@ -1099,4 +1211,3 @@
     };
 
 })(jQuery);
-

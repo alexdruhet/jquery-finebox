@@ -1,6 +1,6 @@
 <?php
- $img_src = $_GET['image'];
- $video_src = $_GET['video'];
+ $img_src = isset($_GET['image']) ? $_GET['image'] : FALSE;
+ $video_src = isset($_GET['video']) ? $_GET['video'] : FALSE;
 ?>
 <!DOCTYPE HTML>
 <html>

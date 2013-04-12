@@ -36,6 +36,8 @@ $player_key = '2dc869296ecb';
                 $rand = rand(23, 7654); 
                 $id = $i + $rand; 
                 $html = '';
+                $fragment_src = '';
+                $fragment = '';
                 if (preg_match('/(\.html|\.php)/', $item)) {
                     // echo '<strong>HTML ('. $item .')</strong>';
                     $html = '<a href="' . $item . '" class="finebox"><span>' . $item.'</span></a>';
@@ -43,7 +45,14 @@ $player_key = '2dc869296ecb';
                 else if (preg_match('/(\.jpg|\.gif|\.png)/', $item)) {
                     // echo '<strong>IMAGE ('. $item .')</strong>';
                     $href = ($rand % 2 == 1) ? 'item.php?image=' . $item . '&amp;id=' . $id : 'images/' . $item . '?id=' . $id;
-                    $html = '<a href="' . $href . '" class="finebox"><span><img alt="sample" src="images/thumb-' . $item . '" /></span></a>';
+                    if ($rand % 2 == 1) {
+                        $fragment_src = ' data-fragment-src="#finebox-data-' . $id . '"';
+                        $fragment = '<div class="finebox-data" id="finebox-data-' . $id . '">'
+                                   .'<h2>' . $item . '</h2>'
+                                   .'</div>';
+                    }
+                    $html = '<a href="' . $href . '" class="finebox"' . $fragment_src . '><span><img alt="sample" src="images/thumb-' . $item . '" /></span></a>'
+                           .$fragment;
                 }
                 else if (preg_match('/(\.m4v|\.mov)/', $item)) {
                     // echo '<strong>VIDEO ('. $item .')</strong>';
